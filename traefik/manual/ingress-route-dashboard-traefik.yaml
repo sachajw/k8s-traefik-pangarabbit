@@ -1,13 +1,13 @@
 apiVersion: traefik.containo.us/v1alpha1
 kind: IngressRoute
 metadata:
-  name: dashboard
+  name: traefik-dashboard-secure
 spec:
   entryPoints:
   - web
   routes:
   - kind: Rule
-    match: Host("dashboard-traefik.lair.pangarabbit.com")
+    match: Host("dashboard.lair.pangarabbit.com") && PathPrefix("/api")
     services:
     - name: dashboard
       port: 9000
@@ -15,7 +15,7 @@ spec:
 #    - name: dashboard-auth
 #    - name: dashboard-rewrite
   - kind: Rule
-    match: Host("dashboard-traefik.lair.pangarabbit.com") && PathPrefix("/api")
+    match: Host("dashboard.lair.pangarabbit.com") && PathPrefix("/api")
     services:
     - name: dashboard
       port: 9000
