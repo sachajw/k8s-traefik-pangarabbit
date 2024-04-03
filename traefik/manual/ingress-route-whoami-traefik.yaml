@@ -1,0 +1,15 @@
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: whoami-https
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`whoami.lair.pangarabbit.com`)
+      kind: Rule
+      services:
+        - name: whoami-service
+          port: 80
+  tls:
+    certResolver: letsencrypt
