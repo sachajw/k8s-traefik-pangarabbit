@@ -21,7 +21,7 @@ deployment:
   # -- Deployment or DaemonSet
   kind: Deployment
   # -- Number of pods of the deployment (only applies when kind == Deployment)
-  replicas: 3
+  replicas: 1
   # -- Number of old history to retain to allow rollback (If not set, default Kubernetes value is set to 10)
   # revisionHistoryLimit: 1
   # -- Amount of time (in seconds) before Kubernetes will send the SIGKILL signal if Traefik does not shut down
@@ -152,19 +152,14 @@ ingressRoute:
     enabled: true
     # -- Additional ingressRoute annotations (e.g. for kubernetes.io/ingress.class)
     annotations: {}
-    kubernetes.io/ingress.class: traefik
-    traefik.ingress.kubernetes.io/router.entrypoints: web
     # -- Additional ingressRoute labels (e.g. for filtering IngressRoute by custom labels)
-    additionalArguments:
     labels: {}
     # -- The router match rule used for the dashboard ingressRoute
-    matchRule: (PathPrefix(`/dashboard`) || PathPrefix(`/api`))
+    matchRule: PathPrefix(`/dashboard`) || PathPrefix(`/api`)
     # -- Specify the allowed entrypoints to use for the dashboard ingress route, (e.g. traefik, web, websecure).
     # By default, it's using traefik entrypoint, which is not exposed.
     # /!\ Do not expose your dashboard without any protection over the internet /!\
     entryPoints: ["traefik"]
-    #  - web
-    #  - websecure
     # -- Additional ingressRoute middlewares (e.g. for authentication)
     middlewares: []
     # -- TLS options (e.g. secret containing certificate)
@@ -181,8 +176,6 @@ ingressRoute:
     # -- Specify the allowed entrypoints to use for the healthcheck ingress route, (e.g. traefik, web, websecure).
     # By default, it's using traefik entrypoint, which is not exposed.
     entryPoints: ["traefik"]
-    #  - web
-    #  - websecure
     # -- Additional ingressRoute middlewares (e.g. for authentication)
     middlewares: []
     # -- TLS options (e.g. secret containing certificate)
@@ -234,9 +227,9 @@ providers:
     # -- Load Kubernetes IngressRoute provider
     enabled: true
     # -- Allows IngressRoute to reference resources in namespace other than theirs
-    allowCrossNamespace: true
+    allowCrossNamespace: false
     # -- Allows to reference ExternalName services in IngressRoute
-    allowExternalNameServices: true
+    allowExternalNameServices: false
     # -- Allows to return 503 when there is no endpoints available
     allowEmptyServices: false
     # ingressClass: traefik-internal
@@ -249,7 +242,7 @@ providers:
     # -- Load Kubernetes Ingress provider
     enabled: true
     # -- Allows to reference ExternalName services in Ingress
-    allowExternalNameServices: true
+    allowExternalNameServices: false
     # -- Allows to return 503 when there is no endpoints available
     allowEmptyServices: false
     # ingressClass: traefik-internal
@@ -259,7 +252,7 @@ providers:
     # - "default"
     # IP used for Kubernetes Ingress endpoints
     publishedService:
-      enabled: true
+      enabled: false
       # Published Kubernetes Service to copy status from. Format: namespace/servicename
       # By default this Traefik service
       # pathOverride: ""
@@ -270,8 +263,7 @@ providers:
     # -- Allows Traefik to automatically watch for file changes
     watch: true
     # -- File content (YAML format, go template supported) (see https://doc.traefik.io/traefik/providers/file/)
-    content:
-      ""
+    content: ""
       # http:
       #   routers:
       #     router0:
@@ -311,10 +303,10 @@ logs:
     # format: json
     # By default, the level is set to ERROR.
     # -- Alternative logging levels are DEBUG, PANIC, FATAL, ERROR, WARN, and INFO.
-    level: INFO
+    level: ERROR
   access:
     # -- To enable access logs
-    enabled: true
+    enabled: false
     ## By default, logs are written using the Common Log Format (CLF) on stdout.
     ## To write logs in JSON, use json in the format option.
     ## If the given format is unsupported, the default (CLF) is used instead.
@@ -574,25 +566,28 @@ tracing: {}
 
 # -- Global command arguments to be passed to all traefik's pods
 globalArguments:
-#  - "--api.insecure=true"
-#  - "--serversTransport.insecureSkipVerify=true"
+- "--global.checknewversion"
+- "--global.sendanonymoususage"
+
+#
 # Configure Traefik static configuration
 # -- Additional arguments to be passed at Traefik's binary
 # All available options available on https://docs.traefik.io/reference/static-configuration/cli/
 ## Use curly braces to pass values: `helm install --set="additionalArguments={--providers.kubernetesingress.ingressclass=traefik-internal,--log.level=DEBUG}"`
-#additionalArguments:
+additionalArguments: []
 #  - "--providers.kubernetesingress.ingressclass=traefik-internal"
+#  - "--log.level=DEBUG"
 
 # -- Environment variables to be passed to Traefik's binary
 env:
-  - name: POD_NAME
-    valueFrom:
-      fieldRef:
-        fieldPath: metadata.name
-  - name: POD_NAMESPACE
-    valueFrom:
-      fieldRef:
-        fieldPath: metadata.namespace
+- name: POD_NAME
+  valueFrom:
+    fieldRef:
+      fieldPath: metadata.name
+- name: POD_NAMESPACE
+  valueFrom:
+    fieldRef:
+      fieldPath: metadata.namespace
 # - name: SOME_VAR
 #   value: some-var-value
 # - name: SOME_VAR_FROM_CONFIG_MAP
@@ -631,7 +626,7 @@ ports:
     # -- You SHOULD NOT expose the traefik port on production deployments.
     # If you want to access it from outside your cluster,
     # use `kubectl port-forward` or create a secure ingress
-    expose: true
+    expose: false
     # -- The exposed port for this service
     exposedPort: 9000
     # -- The port protocol (TCP/UDP)
@@ -639,7 +634,7 @@ ports:
     # -- Defines whether the port is exposed on the internal service;
     # note that ports exposed on the default service are exposed on the internal
     # service by default as well.
-    exposeInternal: true
+    exposeInternal: false
   web:
     ## -- Enable this entrypoint as a default entrypoint. When a service doesn't explicitly set an entrypoint it will only use this entrypoint.
     # asDefault: true
@@ -719,7 +714,7 @@ ports:
     ## Set TLS at the entrypoint
     ## https://doc.traefik.io/traefik/routing/entrypoints/#tls
     tls:
-      enabled: false
+      enabled: true
       # this is the name of a TLSOption definition
       options: ""
       certResolver: ""
@@ -800,8 +795,8 @@ service:
   labels: {}
   # -- Additional entries here will be added to the service spec.
   # -- Cannot contain type, selector or ports entries.
-  spec:
-    externalTrafficPolicy: Local
+  spec: {}
+  # externalTrafficPolicy: Cluster
   # loadBalancerIP: "1.2.3.4"
   # clusterIP: "2.3.4.5"
   loadBalancerSourceRanges: []
@@ -865,8 +860,8 @@ persistence:
   #  existingClaim: ""
   accessMode: ReadWriteOnce
   size: 128Mi
-  storageClass: "nfs-csi-traefik"
-  volumeName: "pi8s-nfs-csi-traefik-pvc"
+  # storageClass: ""
+  # volumeName: ""
   path: /data
   annotations: {}
   # -- Only mount a subpath of the Volume into the pod
@@ -991,10 +986,12 @@ podSecurityContext:
 #
 # In some cases, it can avoid the need for additional, extended or adhoc deployments.
 # See #595 for more details and traefik/tests/values/extra.yaml for example.
-extraObjects:
+extraObjects: []
+
 # This will override the default Release Namespace for Helm.
 # It will not affect optional CRDs such as `ServiceMonitor` and `PrometheusRules`
-namespaceOverride: traefik-v2
+# namespaceOverride: traefik
 #
 ## -- This will override the default app.kubernetes.io/instance label for all Objects.
 # instanceLabelOverride: traefik
+
