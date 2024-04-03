@@ -154,17 +154,15 @@ ingressRoute:
     annotations: {}
     # -- Additional ingressRoute labels (e.g. for filtering IngressRoute by custom labels)
     additionalArguments:
-      - "--providers.kubernetesingress.ingressclass=traefik"
-      - "--providers.kubernetesingress.ingressendpoint.publishedservice=traefik/traefik"
     labels: {}
     # -- The router match rule used for the dashboard ingressRoute
-    matchRule: (Host(`192.168.0.151`) || Host(`dashboard-traefik.lair.pangarabbit.com`) && (PathPrefix(`/dashboard`) || PathPrefix(`/api`))
+    matchRule: (PathPrefix(`/dashboard`) || PathPrefix(`/api`))
     # -- Specify the allowed entrypoints to use for the dashboard ingress route, (e.g. traefik, web, websecure).
     # By default, it's using traefik entrypoint, which is not exposed.
     # /!\ Do not expose your dashboard without any protection over the internet /!\
-    entryPoints:
-      - web
-      - websecure
+    entryPoints: ["traefik"]
+    #  - web
+    #  - websecure
     # -- Additional ingressRoute middlewares (e.g. for authentication)
     middlewares: []
     # -- TLS options (e.g. secret containing certificate)
@@ -180,9 +178,9 @@ ingressRoute:
     matchRule: PathPrefix(`/ping`)
     # -- Specify the allowed entrypoints to use for the healthcheck ingress route, (e.g. traefik, web, websecure).
     # By default, it's using traefik entrypoint, which is not exposed.
-    entryPoints:
-      - web
-      - websecure
+    entryPoints: ["traefik"]
+    #  - web
+    #  - websecure
     # -- Additional ingressRoute middlewares (e.g. for authentication)
     middlewares: []
     # -- TLS options (e.g. secret containing certificate)
@@ -311,7 +309,7 @@ logs:
     # format: json
     # By default, the level is set to ERROR.
     # -- Alternative logging levels are DEBUG, PANIC, FATAL, ERROR, WARN, and INFO.
-    level: DEBUG
+    level: INFO
   access:
     # -- To enable access logs
     enabled: true
@@ -574,8 +572,8 @@ tracing: {}
 
 # -- Global command arguments to be passed to all traefik's pods
 globalArguments:
-  - "--api.insecure=true"
-  - "--serversTransport.insecureSkipVerify=true"
+#  - "--api.insecure=true"
+#  - "--serversTransport.insecureSkipVerify=true"
 # Configure Traefik static configuration
 # -- Additional arguments to be passed at Traefik's binary
 # All available options available on https://docs.traefik.io/reference/static-configuration/cli/
@@ -865,8 +863,8 @@ persistence:
   #  existingClaim: ""
   accessMode: ReadWriteOnce
   size: 128Mi
-  # storageClass: ""
-  # volumeName: ""
+  storageClass: "nfs-csi-traefik"
+  volumeName: "pi8s-nfs-csi-traefik-pvc"
   path: /data
   annotations: {}
   # -- Only mount a subpath of the Volume into the pod
