@@ -4,14 +4,11 @@ kind: IngressRoute
 metadata:
   name: dashboard
   namespace: traefik-v2
-  annotations:
-    kubernetes.io/ingress.class: traefik
-    traefik.ingress.kubernetes.io/router.entrypoints: web
 spec:
   entryPoints:
-    - web
+    - websecure
   routes:
-    - match: Host(`traefik.lair.pangarabbit.com`) || Host(`dashboard-traefik.lair.pangarabbit.com`) || Host(`192.168.0.151`)
+    - match: Host(`traefik.pangarabbit.com`)
       kind: Rule
       services:
         - name: api@internal

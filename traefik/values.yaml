@@ -21,7 +21,7 @@ deployment:
   # -- Deployment or DaemonSet
   kind: Deployment
   # -- Number of pods of the deployment (only applies when kind == Deployment)
-  replicas: 1
+  replicas: 3
   # -- Number of old history to retain to allow rollback (If not set, default Kubernetes value is set to 10)
   # revisionHistoryLimit: 1
   # -- Amount of time (in seconds) before Kubernetes will send the SIGKILL signal if Traefik does not shut down
@@ -572,8 +572,7 @@ tracing: {}
 
 # -- Global command arguments to be passed to all traefik's pods
 globalArguments:
-- "--global.checknewversion"
-- "--global.sendanonymoususage"
+- "--entrypoints.web.http.redirections.entryPoint.to=websecure"
 
 #
 # Configure Traefik static configuration
@@ -771,7 +770,10 @@ tlsOptions: {}
 #   default:
 #     defaultCertificate:
 #       secretName: tls-cert
-tlsStore: {}
+tlsStore:
+  default:
+    defaultCertificate:
+      secretName: wildcard-pangarabbit-com-tls
 
 service:
   enabled: true
@@ -856,7 +858,7 @@ persistence:
   accessMode: ReadWriteMany
   size: 128Mi
   storageClass: "nfs-csi-traefik"
-  volumeName: "pi8s-nfs-csi-traefik-pvc"
+  #volumeName: "pi8s-nfs-csi-traefik-pvc"
   path: /data
   annotations: {}
   # -- Only mount a subpath of the Volume into the pod
